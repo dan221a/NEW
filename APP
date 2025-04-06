@@ -1,0 +1,64 @@
+import streamlit as st
+import pandas as pd
+import numpy as np
+
+st.set_page_config(page_title="Contamio Dashboard", layout="wide")
+
+# Sidebar
+st.sidebar.title("Contamio")
+st.sidebar.markdown("נהל סיכוני בטיחות מזון בצורה חכמה ואישית")
+
+# Main Title
+st.title("📊 לוח מחוונים לניהול סיכוני בטיחות מזון - Contamio")
+st.markdown("""
+יישום הדגמה למערכת Contamio - פתרון מבוסס דאטה לחיזוי וניהול מותאם אישית של סיכוני בטיחות מזון.
+""")
+
+# Simulate layered risk data
+def generate_sample_data():
+    np.random.seed(42)
+    plants = ["מפעל א", "מפעל ב", "מפעל ג"]
+    risks = ["ליסטריה", "סלמונלה", "E.Coli", "שברי זכוכית"]
+    data = []
+    for plant in plants:
+        for risk in risks:
+            global_risk = np.random.rand()
+            interplant_risk = np.random.rand()
+            internal_risk = np.random.rand()
+            weight = np.random.rand()
+            final_score = round((global_risk * 0.3 + interplant_risk * 0.3 + internal_risk * 0.4) * weight, 2)
+            data.append({
+                "מפעל": plant,
+                "סיכון": risk,
+                "גלובלי": global_risk,
+                "בין-מפעלי": interplant_risk,
+                "פנימי": internal_risk,
+                "משקל דינמי": weight,
+                "ציון סופי": final_score
+            })
+    return pd.DataFrame(data)
+
+# Load data
+df = generate_sample_data()
+
+# Filter
+def show_filters():
+    plant_filter = st.sidebar.selectbox("בחר מפעל", options=["הכל"] + list(df["מפעל"].unique()))
+    if plant_filter != "הכל":
+        return df[df["מפעל"] == plant_filter]
+    return df
+
+filtered_df = show_filters()
+
+# Display table
+st.subheader("📋 נתוני סיכונים")
+st.dataframe(filtered_df.style.background_gradient(cmap="OrRd"), use_container_width=True)
+
+# Charts
+st.subheader("📈 השוואת סיכונים בין סוגים")
+risk_summary = filtered_df.groupby("סיכון")["ציון סופי"].mean().sort_values(ascending=False)
+st.bar_chart(risk_summary)
+
+st.markdown("---")
+st.caption("© 2025 Contamio - All rights reserved")
+
